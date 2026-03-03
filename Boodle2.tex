@@ -1,0 +1,94 @@
+\documentclass[10pt]{extarticle}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage{cancel}
+\usepackage{tcolorbox}
+\usepackage{bold-extra}
+\usepackage{multicol}
+\allowdisplaybreaks
+
+\title{\centering\Large\textsc{\textbf{Predictive Data Modeling: BoodleBox Review 2}}}
+\author{\large \textsc{Rento Saijo}}
+\date{March 24, 2026}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\textsc{Page \thepage\ of \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0pt}
+\tcbset{colframe=darkgray!100, arc=0.1mm, boxrule=2pt, boxsep=1mm}
+\newtcolorbox{problem}[1][]{title={\textsc{#1}}}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-1em}\noindent\rule{\linewidth}{0.6pt}\vspace{0.5em}
+
+\begin{problem}[Instructions]
+Use BoodleBox (LLAMA4) to try to better understand the CH4 section on fitting a line to a transformed space (general linear regression model with Logistic or Poisson regression). Some questions you can ask it is to fit a line on a given data set, or explain what a good fit is on your given data. Try to be specific, and if you are not getting the answer you are looking for, try using more technical terms from your text or your previous chat from CH3.
+
+\medskip
+In this assignment, document your interactions by answering the following:
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+\item What did you ask?
+\item Was it helpful initially, or were you able to refine your interaction to get a better response?
+\item Were you able to have some discussion about line fitting?
+\item Did you provide some data and get a model fit to that data with some explanation?
+\item How much time did you spend on this effort?
+\end{enumerate}
+\end{problem}
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+
+\item \textbf{What did you ask?}
+
+I focused my prompts on how Chapter 4 extends ``fit a line'' from ordinary least squares to transformed spaces. I asked LLAMA4 to explain why logistic and Poisson models are still line fitting methods, even though the response is no longer modeled directly in the original scale. I also asked it to compare our class implementation choices from CH4 (partitioning strategy, threshold tuning, and GLM setup) versus generic cookbook implementations. For any reference to our class material, I provided the necessary notebook, textbook pages, code, etc.
+
+\noindent\textbf{Prompt 1 (conceptual):} ``In CH4, how is logistic regression still fitting a line? Please show the model in probability form and in logit form and explain what is linear.''
+
+\noindent\textbf{Prompt 2 (Poisson/GLM):} ``For count data, explain the Poisson model as a transformed linear model. Why do we use a log link, and what does a coefficient mean after exponentiating?''
+
+\noindent\textbf{Prompt 3 (class convention):} ``Using our CH4 notebook style, compare random partitioning versus partition-by-key, and explain how threshold choice changes logistic metrics under class imbalance.''
+
+\noindent\textbf{Prompt 4 (applied):} ``Use NHANES-like variables and describe what a good fit looks like for a logistic model (binary outcome) and a Poisson/Tweedie model (count outcome), including AUC, confusion matrix, deviance, and D-squared.''
+
+
+\item \textbf{Was it helpful initially, or were you able to refine your interaction to get a better response?}
+
+The initial responses were useful but too broad. At first, LLAMA4 gave standard textbook descriptions, but they did not line up tightly with how we actually coded CH4 in class. Once I refined my prompts to include specific terms from our notebook, the quality improved a lot. The key refinements were: ``partition\_by\_key,'' ``test split at least 20\%,'' ``predict\_proba threshold calibration,'' ``confusion matrix tradeoff,'' and ``TweedieRegressor with power=1 for Poisson-style GLM.'' After that refinement, LLAMA4 gave responses that matched our workflow better: first define the transformed linear predictor, then split train/test correctly, then evaluate with the metrics that match the model family (classification metrics for logistic, deviance/D-squared for Poisson). This was much closer to the class convention and much less generic.
+
+\item \textbf{Were you able to have some discussion about line fitting?}
+
+Yes. The most useful part was understanding that we are still fitting a linear function of predictors, but on a transformed scale. For logistic regression, LLAMA4 and I discussed:
+\[
+\log\!\left(\frac{p(X)}{1-p(X)}\right)=\beta_0+\beta_1X_1+\cdots+\beta_pX_p,
+\]
+so the line is in log-odds space, not directly in probability space. For Poisson-type GLM, we discussed:
+\[
+\log\!\big(\lambda(X)\big)=\beta_0+\beta_1X_1+\cdots+\beta_pX_p,
+\]
+with \(\lambda(X)=E(Y\mid X)\) as the expected count. That made Chapter 4 more intuitive: CH3 fits a line directly to \(Y\), while CH4 fits a line to a transformed target (log-odds or log-mean count) and then maps back to the original response scale. We also discussed that ``good fit'' differs by problem type: for logistic it depends on threshold-sensitive metrics (precision/recall/F1, confusion matrix) plus threshold-free metrics like AUC, while for Poisson/GLM it is more natural to inspect deviance and D-squared.
+
+\item \textbf{Did you provide some data and get a model fit to that data with some explanation?}
+
+Yes. I used the same NHANES modeling setup we practiced in class convention. For the logistic example, I used a binary response (\texttt{Diabetes}) and predictors \texttt{Age}, \texttt{BMI}, \texttt{BPSysAve}, and \texttt{TotChol}, with interaction terms for correlated predictors above 0.25 in absolute value. For this full model, one class-convention run produced test AUC \(\approx 0.8250\). At the default threshold 0.50, accuracy was high (\(0.9110\)) but recall was low (\(0.1447\)); after tuning the threshold to \(0.15\), recall improved to \(0.5855\) with F1 \(0.4384\), and the confusion matrix was
+\[
+\begin{bmatrix}
+1268 & 165\\
+63 & 89
+\end{bmatrix}.
+\]
+That helped clarify the threshold tradeoff we discussed in CH4. For the Poisson/GLM example, I used a count response (\texttt{AlcoholYear}) with predictors \texttt{Age}, \texttt{BMI}, \texttt{Weight}, and \texttt{AlcoholDay}, then fit a Poisson-style GLM using \texttt{TweedieRegressor(power=1, alpha=0.5)} to match class style. In that setup (with interactions \texttt{Age*AlcoholDay} and \texttt{BMI*Weight}), the full model gave mean Poisson deviance \(\approx 97.6049\) and \(D^2\approx 0.1044\). A minimal model with only \texttt{Age} and \texttt{BMI} gave worse fit (deviance \(\approx 99.0518\), \(D^2\approx 0.0210\)), which matched the expectation that a smaller feature set can lose predictive signal.
+
+
+\item \textbf{How much time did you spend on this effort?}
+
+I spent about 50 minutes total. Around 15 minutes went to initial prompting and reading broad responses, about 20 minutes to refining prompts with CH4 technical vocabulary and class implementation details, and about 15 minutes to validating the discussion against my own NHANES model outputs and writing up the final explanation in LaTeX format.
+
+\end{enumerate}
+
+\end{document}
