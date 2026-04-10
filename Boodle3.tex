@@ -1,0 +1,121 @@
+\documentclass[10pt]{extarticle}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage{cancel}
+\usepackage{tcolorbox}
+\usepackage{bold-extra}
+\usepackage{multicol}
+\allowdisplaybreaks
+
+\title{\centering\Large\textsc{\textbf{Predictive Data Modeling: BoodleBox Review 3}}}
+\author{\large \textsc{Rento Saijo}}
+\date{April 9, 2026}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\textsc{Page \thepage\ of \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0pt}
+\tcbset{colframe=darkgray!100, arc=0.1mm, boxrule=2pt, boxsep=1mm}
+\newtcolorbox{problem}[1][]{title={\textsc{#1}}}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-1em}\noindent\rule{\linewidth}{0.6pt}\vspace{0.5em}
+
+\begin{problem}[Instructions]
+Use BoodleBox (LLAMA4) to try to better understand the CH12 section on building a DCNN (deep convolutional neural network model). Load the Fashion MNIST dataset in keras: \texttt{https://keras.io/api/datasets/fashion\_mnist/} and build a 50\% split like we did in our CH10 notes. Build a CNN model using our CH10 code as an example. Now, for this assignment you will try to get help coding your model and also in understanding what the code is doing. You can just write and attach a short PDF that details your interactions:
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+\item Ask LLAMA4 to improve on your basic CNN model by giving your code, what suggestions are given?
+\item Ask LLAMA4 to explain the what the main \texttt{Conv2D} parameter \texttt{filters} does and how you should set it for a good result in your predictive model.
+\item Ask how many \texttt{Conv2D} layers you should use and if you should add drop out, kernel regularization or pooling to get a better result. Ask about any of these terms if you are unsure about what they are doing.
+\item If you were not sure that LLAMA4 was giving a good answer to [3] use the assigned online reading on pooling and then evaluate whether LLAMA4 was giving a good answer in part [3].
+\item How much time did you spend on this effort?
+\end{enumerate}
+\end{problem}
+
+\begin{center}
+\begin{tabular}{l c c c}
+\hline
+Model & Final validation acc. & Test acc. & Test loss\\
+\hline
+Basic CH10-style CNN & 0.7847 & 0.7800 & 0.6033\\
+Improved CNN & 0.8936 & 0.8868 & 0.3278\\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=\arabic*., leftmargin=2em]
+
+\item \textbf{Ask LLAMA4 to improve on your basic CNN model by giving your code, what suggestions are given?}
+
+I started from the same CH10 structure: a \texttt{Sequential} model with two \texttt{Conv2D} layers, two \texttt{MaxPooling2D} layers, \texttt{Flatten}, \texttt{Dropout}, and a softmax output. I gave LLAMA4 that baseline and asked how to improve it for Fashion MNIST without leaving the class convention.
+
+\noindent\textbf{Prompt:} ``Here is my basic CH10-style keras CNN for Fashion MNIST. What changes would you suggest if I want better predictive performance but I still want to stay close to this course code style?''
+
+The main suggestions LLAMA4 gave were reasonable and consistent with our notes:
+\begin{enumerate}[label=\alph*., leftmargin=2em]
+\item Increase the number of filters gradually instead of using only 8 and 12. A progression like 32 $\rightarrow$ 64 $\rightarrow$ 96 or 32 $\rightarrow$ 64 $\rightarrow$ 128 gives the model more feature extraction capacity.
+\item Add one more convolution layer because Fashion MNIST is still small enough for a compact deep CNN, but has more visual complexity than handwritten digits.
+\item Keep pooling, because the model needs to reduce spatial dimension and form a hierarchy of features.
+\item Use dropout more moderately than 0.5 in the hidden part of the network; values around 0.2 to 0.3 are often easier to train.
+\item If overfitting becomes noticeable, add a small kernel regularization penalty such as L2 rather than making dropout extremely large everywhere.
+\item Train for a few epochs rather than a single demonstration epoch.
+\end{enumerate}
+
+I tested a class-compatible improved model with 3 convolution layers, filter counts 32, 64, and 96, max pooling after the first two convolution blocks, dropout 0.3, and small L2 kernel regularization. That improved the final validation accuracy from $0.7847$ to $0.8936$, and the test accuracy from $0.7800$ to $0.8868$. So the improved version gained about $10.68$ percentage points of test accuracy while also lowering test loss from $0.6033$ to $0.3278$.
+
+\item \textbf{Ask LLAMA4 to explain what the main \texttt{Conv2D} parameter \texttt{filters} does and how you should set it for a good result in your predictive model.}
+
+\noindent\textbf{Prompt:} ``What does the \texttt{filters} argument in \texttt{Conv2D} do, and how should I set it for a good Fashion MNIST model?''
+
+The best explanation is that \texttt{filters} is the number of learned kernels in that convolution layer, which is also the depth of the output feature map. Each filter tries to detect some local visual pattern. Early filters often detect simple things such as edges, short lines, corners, or texture changes; deeper filters can combine those into more complex patterns related to clothing shape or texture.
+
+In our basic model, the first layer uses
+\[
+\texttt{Conv2D}(8,(3,3)),
+\]
+so the output has 8 channels. Since the input is grayscale with one channel, the number of trainable parameters in that first layer is
+\[
+(3\cdot 3\cdot 1 + 1)\cdot 8 = 80.
+\]
+The second convolution layer uses 12 filters and receives 8 channels from the previous layer, so its parameter count is
+\[
+(3\cdot 3\cdot 8 + 1)\cdot 12 = 876.
+\]
+That makes the baseline model very small overall: only 3{,}966 trainable parameters.
+
+The practical issue is that too few filters can underfit because the model does not have enough channels to represent distinct local patterns, while too many filters can increase parameter count and overfitting risk. On this dataset, 8 and 12 filters were workable but weak. The improved model used 32, 64, and 96 filters, and this larger feature space gave much better accuracy. So for a 28$\times$28 grayscale image problem like Fashion MNIST, a good starting point is to begin around 16 or 32 filters in the first layer and increase the number in deeper layers, instead of keeping all layers very narrow.
+
+\item \textbf{Ask how many \texttt{Conv2D} layers you should use and if you should add drop out, kernel regularization or pooling to get a better result. Ask about any of these terms if you are unsure about what they are doing.}
+
+\noindent\textbf{Prompt:} ``For Fashion MNIST, how many \texttt{Conv2D} layers should I use? Should I add dropout, kernel regularization, or pooling, and what is each one doing?''
+
+The LLAMA4 answer was mostly good. For this image size, two convolution layers are a reasonable baseline, but three layers is often better because it lets the network build a deeper hierarchy of features without making the model extremely large. Going much deeper than that is harder to justify here because the images are only $28\times 28$ and the class notebook code aims for simple, interpretable models.
+
+The terms were explained as follows:
+\begin{enumerate}[label=\alph*., leftmargin=2em]
+\item \textbf{Pooling:} reduce the spatial size of feature maps, usually with \texttt{MaxPooling2D(2,2)}. This lowers computation and lets later layers summarize larger image regions.
+\item \textbf{Dropout:} randomly turns off some activations during training, which makes the model rely less on any one pathway and can reduce overfitting.
+\item \textbf{Kernel regularization:} adds a penalty to large weights, often with L2 regularization, so the model does not grow overly flexible too quickly.
+\end{enumerate}
+
+For my actual run, the three-layer model with pooling and moderate dropout worked better than the small baseline. The basic model used dropout 0.5 and only two convolution layers; it reached 0.7800 test accuracy. The improved model used three convolution layers, pooling after the first two blocks, dropout 0.3, and L2 kernel regularization, and it reached 0.8868 test accuracy. Based on that result, LLAMA4 was giving good practical advice here. The main caution is that very large dropout and heavy regularization together can make a small model harder to train. For this dataset, modest regularization plus pooling plus one extra convolution layer was enough.
+
+\item \textbf{If you were not sure that LLAMA4 was giving a good answer to [3], use the assigned online reading on pooling and then evaluate whether LLAMA4 was giving a good answer in part [3].}
+
+While I have already worked with these kind of models and parameters and generally had a good foundation, I still checked out the article. After reading the pooling section from that Chapter 8 page, I think the good part of the LLAMA4 answer was the emphasis on \texttt{MaxPooling2D}. The reading explains that pooling aggressively downsamples feature maps, which lets deeper layers look at effectively larger portions of the original image and build a spatial hierarchy of features. It also explains why removing pooling is a bad idea: the deeper layers would still be looking at relatively small effective windows from the original image, and the feature maps would stay unnecessarily large. The reading further notes that max pooling often works better than simply averaging or only using strided convolutions for this kind of classification model. That matches the advice from part [3].
+
+\item \textbf{How much time did you spend on this effort?}
+
+I spent about 50 minutes total. Roughly 10 minutes went to reviewing the CH10 CNN code and CH12 context, about 15 minutes to interacting with LLAMA4 and refining the prompts, about 15 minutes to running the Fashion MNIST models and recording the main numeric output, and about 10 minutes to writing the LaTeX summary.
+
+\end{enumerate}
+
+\end{document}
