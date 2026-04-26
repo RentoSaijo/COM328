@@ -13,9 +13,8 @@ The project uses NHL regular-season play-by-play data from `2014-15` through `20
 
 The submission files are:
 
-- [scrape.R](/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW/scrape.R): collects and stores the raw play-by-play data
-- [code.ipynb](/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW/code.ipynb): full self-contained notebook with code, questions, outputs, and answers
-- [slides.pptx](/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW/slides.pptx): 5-slide project summary deck
+- [scrape.R](https://github.com/RentoSaijo/COM328/blob/main/xW/scrape.R): collects and stores the raw play-by-play data
+- [code.ipynb](https://github.com/RentoSaijo/COM328/blob/main/xW/code.ipynb): full self-contained notebook with code, questions, outputs, and answers
 
 ## Research Question
 
@@ -50,8 +49,8 @@ Only regular-season games are kept with `typeId == 2`.
 
 The scraping step is intentionally separated into `scrape.R` and saves only:
 
-- `/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW/data/train.parquet`
-- `/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW/data/test.parquet`
+- [`xW/data/train.parquet`](https://github.com/RentoSaijo/COM328/blob/main/xW/data/train.parquet)
+- [`xW/data/test.parquet`](https://github.com/RentoSaijo/COM328/blob/main/xW/data/test.parquet)
 
 The parquet files are much smaller than the earlier CSV version:
 
@@ -144,7 +143,7 @@ At `180` events:
 - test games kept: `1271 / 1271`
 - test games dropped: `0`
 
-This is the cutoff used throughout the notebook and slides.
+This is the cutoff used throughout the notebook.
 
 ## Notebook Structure
 
@@ -307,7 +306,7 @@ That is why the temporal CNN is the better xW-style model candidate.
 - The fixed-width representation keeps `180` evenly spaced retained events, so some within-game detail is intentionally compressed.
 - The current notebook predicts row-level wins rather than turning those outputs into a final game-level xW reporting metric.
 
-## Recommended Next Step
+## Potential Next Step
 
 The clearest extension is:
 
@@ -319,7 +318,7 @@ That would let the project answer a more hockey-native question such as:
 
 ## Reproducing The Project
 
-From `/Users/rsai_91/Desktop/Academic/Spring2026/COM328/xW`:
+From the [`xW`](https://github.com/RentoSaijo/COM328/tree/main/xW) directory in [this repository](https://github.com/RentoSaijo/COM328):
 
 1. Run the scraper:
 
@@ -333,16 +332,9 @@ Rscript scrape.R
 jupyter execute code.ipynb --inplace
 ```
 
-3. Rebuild the slide deck if needed:
-
-```bash
-"/Users/rsai_91/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node" presentation_workspace/src/deck.mjs
-```
-
 ## Supporting Files
 
-- `cache/`: cached widened matrices
-- `outputs/analysis_results.json`: saved numeric results used by the notebook
-- `outputs/pca_2_embedding.npy`: PCA embedding
-- `outputs/umap_2_embedding.npy`: UMAP embedding
-- `presentation_workspace/`: editable slide source, previews, and export workspace
+- [`xW/cache/`](https://github.com/RentoSaijo/COM328/tree/main/xW/cache): cached widened matrices
+- [`xW/outputs/analysis_results.json`](https://github.com/RentoSaijo/COM328/blob/main/xW/outputs/analysis_results.json): saved numeric results used by the notebook
+- [`xW/outputs/pca_2_embedding.npy`](https://github.com/RentoSaijo/COM328/blob/main/xW/outputs/pca_2_embedding.npy): PCA embedding
+- [`xW/outputs/umap_2_embedding.npy`](https://github.com/RentoSaijo/COM328/blob/main/xW/outputs/umap_2_embedding.npy): UMAP embedding
